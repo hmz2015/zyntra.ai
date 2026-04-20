@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyntra</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #212121; color: #ececec; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 260px; background: #171717; display: flex; flex-direction: column; padding: 10px 8px; }
+        .sidebar-top { display: flex; align-items: center; justify-content: space-between; padding: 8px 6px; margin-bottom: 4px; }
+        .logo { display: flex; align-items: center; gap: 8px; }
+        .logo img { width: 32px; height: 32px; object-fit: contain; }
+        .logo-name { font-size: 16px; font-weight: 700; color: #ececec; }
+        .icon-btn { background: none; border: none; color: #8e8ea0; cursor: pointer; padding: 6px; border-radius: 8px; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: #2f2f2f; color: #ececec; }
+        .new-chat-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 14px; color: #ececec; margin-bottom: 4px; transition: background 0.15s; background: none; border: none; width: 100%; text-align: left; }
+        .new-chat-btn:hover { background: #2f2f2f; }
+        .sidebar-section { font-size: 11px; color: #8e8ea0; padding: 8px 12px 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #c5c5d2; margin-bottom: 2px; transition: background 0.15s; }
+        .chat-item:hover { background: #2f2f2f; }
+        .chat-item.active { background: #2f2f2f; color: #ececec; }
+        .chat-item.pinned { border-left: 3px solid #CC785C; }
+        .chat-item-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .chat-dots { color: #555; font-size: 16px; display: none; cursor: pointer; flex-shrink: 0; padding: 2px 6px; border-radius: 4px; }
+        .chat-item:hover .chat-dots { display: block; }
+        .chat-dots:hover { background: #404040; color: #ececec; }
+        .group-section { margin-top: 8px; }
+        .group-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #c5c5d2; margin-bottom: 2px; transition: background 0.15s; }
+        .group-item:hover { background: #2f2f2f; color: #ececec; }
+        .group-icon { width: 24px; height: 24px; border-radius: 50%; background: #CC785C; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
+        .sidebar-bottom { margin-top: auto; padding: 8px 4px; border-top: 1px solid #2f2f2f; }
+        .user-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #CC785C; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; flex-shrink: 0; }
+        .user-name { font-size: 13px; color: #ececec; flex: 1; }
+        .logout-link { font-size: 12px; color: #8e8ea0; text-decoration: none; }
+        .logout-link:hover { color: #CC785C; }
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .header { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+        .model-label { font-size: 15px; font-weight: 700; color: #ececec; }
+        .mode-select { background: #2f2f2f; color: #ececec; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+        .mode-select:focus { outline: none; }
+        .welcome { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+        .welcome h1 { font-size: 32px; font-weight: 600; color: #ececec; margin-bottom: 30px; text-align: center; }
+        .welcome-input-area { width: 100%; max-width: 680px; }
+        .messages { flex: 1; overflow-y: auto; padding: 20px 0; display: none; flex-direction: column; }
+        .messages.active { display: flex; }
+        .msg-row { padding: 8px 20%; display: flex; flex-direction: column; }
+        .msg-row.user { align-items: flex-end; }
+        .msg-row.assistant { align-items: flex-start; }
+        .msg-bubble { max-width: 85%; }
+        .msg-row.user .msg-bubble { background: #2f2f2f; border-radius: 18px; padding: 12px 18px; font-size: 15px; color: #ececec; line-height: 1.6; }
+        .msg-row.assistant .msg-bubble { background: transparent; padding: 4px 0; font-size: 15px; color: #ececec; line-height: 1.7; }
+        .msg-sender { font-size: 12px; color: #8e8ea0; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .msg-sender img { width: 24px; height: 24px; object-fit: contain; }
+        .msg-sender .avatar-small { width: 24px; height: 24px; border-radius: 50%; background: #CC785C; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; }
+        .input-area { padding: 16px 20%; }
+        .input-container { background: #2f2f2f; border-radius: 16px; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .input-row { display: flex; align-items: flex-end; gap: 8px; }
+        .input-box { flex: 1; background: transparent; border: none; color: #ececec; font-size: 15px; resize: none; max-height: 200px; font-family: inherit; line-height: 1.5; }
+        .input-box:focus { outline: none; }
+        .input-box::placeholder { color: #8e8ea0; }
+        .input-actions { display: flex; align-items: center; justify-content: space-between; }
+        .input-left { display: flex; gap: 4px; }
+        .action-btn { background: none; border: none; color: #8e8ea0; cursor: pointer; padding: 6px 10px; border-radius: 8px; font-size: 13px; transition: all 0.15s; }
+        .action-btn:hover { background: #404040; color: #ececec; }
+        .send-btn { background: #ececec; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: #212121; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+        .send-btn:hover { background: #CC785C; color: white; }
+        .send-btn:disabled { background: #404040; color: #8e8ea0; cursor: not-allowed; }
+        .mic-btn { background: none; border: none; color: #8e8ea0; cursor: pointer; padding: 6px; border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+        .mic-btn:hover { background: #404040; color: #ececec; }
+        .mic-btn.recording { color: #ff4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+        .cursor { display: inline-block; width: 2px; height: 1em; background: #CC785C; margin-left: 2px; vertical-align: text-bottom; animation: blink 0.7s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        .plus-menu { position: fixed; background: #2f2f2f; border: 1px solid #404040; border-radius: 12px; padding: 6px; z-index: 99999; min-width: 200px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); display: none; }
+        .menu-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #c5c5d2; transition: background 0.15s; }
+        .menu-item:hover { background: #404040; color: #ececec; }
+        .ctx-menu { position: fixed; background: #2f2f2f; border: 1px solid #404040; border-radius: 12px; padding: 6px; z-index: 99999; min-width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        .ctx-item { padding: 9px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #c5c5d2; display: flex; align-items: center; gap: 10px; transition: background 0.15s; }
+        .ctx-item:hover { background: #404040; color: #ececec; }
+        .ctx-separator { height: 1px; background: #404040; margin: 4px 0; }
+        .hint { font-size: 11px; color: #8e8ea0; text-align: center; margin-top: 8px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #404040; border-radius: 4px; }
+        .dl-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 20px; background: #CC785C; color: white; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; }
+        .dl-btn:hover { background: #b8664a; }
+        .msg-bubble strong { font-weight: 700; color: #fff; }
+        .msg-bubble code { background: #1a1a1a; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; color: #CC785C; }
+        .msg-bubble pre { background: #1a1a1a; padding: 14px; border-radius: 10px; margin: 8px 0; overflow-x: auto; }
+        .msg-bubble pre code { background: none; padding: 0; color: #ececec; }
+        .msg-bubble ul { padding-left: 20px; margin: 6px 0; }
+        .msg-bubble li { margin: 4px 0; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-top">
+        <div class="logo">
+            <img src="/static/AI.png" alt="Zyntra">
+            <span class="logo-name">Zyntra</span>
+        </div>
+        <button class="icon-btn" onclick="newChat()">✏️</button>
+    </div>
+    <button class="new-chat-btn" onclick="newChat()">＋ Nouveau chat</button>
+    <div class="sidebar-section">Récents</div>
+    <div class="chat-list" id="chatList">
+        {% for chat in chats %}
+        <div class="chat-item {% if chat.id == active.id %}active{% endif %} {% if chat.is_pinned %}pinned{% endif %}"
+             onclick="switchChat({{ chat.id }})" id="chat-{{ chat.id }}"
+             oncontextmenu="showCtxMenu(event, {{ chat.id }}, '{{ chat.name }}')">
+            <span class="chat-item-name">{% if chat.is_pinned %}📌 {% endif %}{{ chat.name }}</span>
+            <span class="chat-dots" onclick="showCtxMenu(event, {{ chat.id }}, '{{ chat.name }}')">···</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% if groups %}
+    <div class="group-section">
+        <div class="sidebar-section">Groupes</div>
+        {% for g in groups %}
+        <div class="group-item" onclick="window.location.href='/group/{{ g.id }}'">
+            <div class="group-icon">{{ g.name[0].upper() }}</div>
+            {{ g.name }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="sidebar-bottom">
+        <div class="user-btn">
+            <div class="user-avatar">{{ user.username[0].upper() }}</div>
+            <span class="user-name">{{ user.username }}</span>
+            <a href="/logout" class="logout-link">Déco</a>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="header">
+        <div class="model-label">Zyntra</div>
+        <select class="mode-select" id="modeSelect">
+            <option value="Normal">Mode Normal</option>
+            <option value="Expert Code">Expert Code</option>
+            <option value="Expo">Mode Expo</option>
+        </select>
+    </div>
+
+    <div class="welcome" id="welcomeScreen">
+        <h1>Par quoi commençons-nous ?</h1>
+        <div class="welcome-input-area">
+            <div class="input-container">
+                <div class="input-row">
+                    <textarea class="input-box" id="inputBoxWelcome" rows="1" placeholder="Posez une question à Zyntra..."></textarea>
+                    <button class="mic-btn" id="micBtnWelcome" onclick="toggleVoice('welcome')">🎤</button>
+                    <button class="send-btn" id="sendBtnWelcome" onclick="sendMsg()" disabled>↑</button>
+                </div>
+                <div class="input-actions">
+                    <div class="input-left">
+                        <button class="action-btn" onclick="toggleMenu(event, this)">＋ Joindre</button>
+                    </div>
+                </div>
+            </div>
+            <div class="hint">Zyntra peut faire des erreurs. Vérifiez les informations importantes.</div>
+        </div>
+    </div>
+
+    <div class="messages" id="messages">
+        {% for msg in messages %}
+        <div class="msg-row {{ msg.role }}">
+            <div class="msg-sender">
+                {% if msg.role == 'assistant' %}
+                    <img src="/static/AI.png" alt="Z"> Zyntra
+                {% else %}
+                    <div class="avatar-small">{{ user.username[0].upper() }}</div> {{ user.username }}
+                {% endif %}
+            </div>
+            <div class="msg-bubble" id="bubble-{{ loop.index }}">{{ msg.content }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="input-area" id="inputArea" style="display:none;">
+        <div class="input-container">
+            <div class="input-row">
+                <textarea class="input-box" id="inputBox" rows="1" placeholder="Envoyer un message à Zyntra..."></textarea>
+                <button class="mic-btn" id="micBtn" onclick="toggleVoice('main')">🎤</button>
+                <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled>↑</button>
+            </div>
+            <div class="input-actions">
+                <div class="input-left">
+                    <button class="action-btn" onclick="toggleMenu(event, this)">＋ Joindre</button>
+                </div>
+            </div>
+        </div>
+        <div class="hint">Zyntra peut faire des erreurs. Vérifiez les informations importantes.</div>
+    </div>
+
+    <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImage(event)">
+    <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="handlePDF(event)">
+</div>
+
+<!-- ✅ Menu joindre DIRECTEMENT dans body -->
+<div id="plusMenu" class="plus-menu">
+    <div class="menu-item" onclick="attachImage()">📎 Joindre une image</div>
+    <div class="menu-item" onclick="attachPDF()">📄 Joindre un PDF</div>
+    <div class="menu-item" onclick="webSearch()">🌐 Recherche Web</div>
+</div>
+
+<script>
+    let activeChatId = {{ active.id }};
+    const msgDiv = document.getElementById('messages');
+    let attachedImage = null;
+    let attachedPDF = null;
+    let ctxMenu = null;
+    let isStreaming = false;
+    let menuOpen = false;
+
+    const hasMessages = {{ messages|length }} > 0;
+    if (hasMessages) {
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('messages').classList.add('active');
+        document.getElementById('inputArea').style.display = 'block';
+    }
+
+    function formatMsg(text) {
+        text = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        text = text.replace(/Telecharger le PowerPoint : (\/static\/\S+)/g, '<a href="$1" download class="dl-btn">⬇️ Télécharger le PowerPoint</a>');
+        text = text.replace(/```[\w]*\n?([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        text = text.replace(/^### (.+)$/gm, '<h3 style="margin:10px 0 4px;font-size:15px;color:#fff">$1</h3>');
+        text = text.replace(/^## (.+)$/gm, '<h2 style="margin:12px 0 6px;font-size:17px;color:#fff">$1</h2>');
+        text = text.replace(/^# (.+)$/gm, '<h1 style="margin:14px 0 8px;font-size:20px;color:#fff">$1</h1>');
+        text = text.replace(/^[\*\-] (.+)$/gm, '<li>$1</li>');
+        text = text.replace(/\n/g, '<br>');
+        return text;
+    }
+
+    document.querySelectorAll('.msg-bubble').forEach(b => { b.innerHTML = formatMsg(b.innerText); });
+    msgDiv.scrollTop = msgDiv.scrollHeight;
+
+    function setupInput(inputId, btnId) {
+        const input = document.getElementById(inputId);
+        const btn = document.getElementById(btnId);
+        if (!input || !btn) return;
+        input.addEventListener('input', function() {
+            btn.disabled = !this.value.trim() || isStreaming;
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+        });
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!btn.disabled && !isStreaming) sendMsg();
+            }
+        });
+    }
+    setupInput('inputBoxWelcome', 'sendBtnWelcome');
+    setupInput('inputBox', 'sendBtn');
+
+    // ✅ FIX JOINDRE : menu placé directement dans body, position calculée après affichage
+    function toggleMenu(e, btn) {
+        e.stopPropagation();
+        const menu = document.getElementById('plusMenu');
+        if (menuOpen) {
+            menu.style.display = 'none';
+            menuOpen = false;
+            return;
+        }
+        menu.style.visibility = 'hidden';
+        menu.style.display = 'block';
+        const rect = btn.getBoundingClientRect();
+        const menuH = menu.offsetHeight;
+        const menuW = menu.offsetWidth;
+        let top = rect.top - menuH - 8;
+        let left = rect.left;
+        if (top < 0) top = rect.bottom + 8;
+        if (left + menuW > window.innerWidth) left = window.innerWidth - menuW - 8;
+        menu.style.top = top + 'px';
+        menu.style.left = left + 'px';
+        menu.style.visibility = 'visible';
+        menuOpen = true;
+    }
+
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('plusMenu');
+        if (menuOpen && !menu.contains(e.target)) {
+            menu.style.display = 'none';
+            menuOpen = false;
+        }
+        if (ctxMenu && !ctxMenu.contains(e.target)) ctxMenu.remove();
+    });
+
+    function closeMenu() {
+        document.getElementById('plusMenu').style.display = 'none';
+        menuOpen = false;
+    }
+
+    function attachImage() { closeMenu(); document.getElementById('imageInput').click(); }
+    function handleImage(e) {
+        const f = e.target.files[0]; if (!f) return;
+        attachedImage = f;
+        getActiveInput().placeholder = `📎 ${f.name} joint`;
+        document.getElementById('sendBtn').disabled = false;
+        document.getElementById('sendBtnWelcome').disabled = false;
+    }
+    function attachPDF() { closeMenu(); document.getElementById('pdfInput').click(); }
+    function handlePDF(e) {
+        const f = e.target.files[0]; if (!f) return;
+        attachedPDF = f;
+        getActiveInput().placeholder = `📄 ${f.name} joint`;
+        document.getElementById('sendBtn').disabled = false;
+        document.getElementById('sendBtnWelcome').disabled = false;
+    }
+    function webSearch() {
+        closeMenu();
+        const inp = getActiveInput(); inp.value = '🌐 '; inp.focus();
+        document.getElementById('sendBtn').disabled = false;
+        document.getElementById('sendBtnWelcome').disabled = false;
+    }
+    function getActiveInput() {
+        return document.getElementById('inputArea').style.display !== 'none'
+            ? document.getElementById('inputBox') : document.getElementById('inputBoxWelcome');
+    }
+
+    async function sendMsg() {
+        if (isStreaming) return;
+        const isWelcome = document.getElementById('welcomeScreen').style.display !== 'none';
+        const inputEl = isWelcome ? document.getElementById('inputBoxWelcome') : document.getElementById('inputBox');
+        let text = inputEl.value.trim();
+        const mode = document.getElementById('modeSelect').value;
+        if (!text && !attachedImage && !attachedPDF) return;
+
+        let displayText = text, sendText = text;
+        if (attachedImage) { displayText = `📎 ${attachedImage.name}\n${text}`; sendText = `[Image: ${attachedImage.name}] ${text}`; attachedImage = null; }
+        if (attachedPDF) { displayText = `📄 ${attachedPDF.name}\n${text}`; sendText = `[PDF: ${attachedPDF.name}] ${text}`; attachedPDF = null; }
+
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+        inputEl.placeholder = isWelcome ? 'Posez une question à Zyntra...' : 'Envoyer un message à Zyntra...';
+        isStreaming = true;
+        document.getElementById('sendBtn').disabled = true;
+        document.getElementById('sendBtnWelcome').disabled = true;
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('messages').classList.add('active');
+        document.getElementById('inputArea').style.display = 'block';
+
+        // ✅ FIX : message user affiché correctement à droite
+        appendMsg('user', displayText, '{{ user.username }}');
+
+        // bulle Zyntra vide avec curseur
+        const loadId = appendMsg('assistant', '', 'Zyntra');
+        const bubble = document.getElementById(loadId);
+        bubble.innerHTML = '<span class="cursor"></span>';
+        bubble.dataset.raw = '';
+
+        try {
+            const res = await fetch('/api/send', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({chat_id: activeChatId, message: sendText, mode: mode})
+            });
+            const contentType = res.headers.get('content-type') || '';
+
+            if (contentType.includes('application/json')) {
+                const data = await res.json();
+                bubble.innerHTML = formatMsg(data.reply);
+                const nameEl = document.querySelector(`#chat-${activeChatId} .chat-item-name`);
+                if (nameEl) nameEl.innerText = data.chat_name;
+                isStreaming = false;
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('sendBtnWelcome').disabled = false;
+                msgDiv.scrollTop = msgDiv.scrollHeight;
+                return;
+            }
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    const jsonStr = line.slice(6).trim();
+                    if (!jsonStr) continue;
+                    try {
+                        const parsed = JSON.parse(jsonStr);
+                        if (parsed.token) {
+                            bubble.dataset.raw += parsed.token;
+                            bubble.innerHTML = formatMsg(bubble.dataset.raw) + '<span class="cursor"></span>';
+                            msgDiv.scrollTop = msgDiv.scrollHeight;
+                        }
+                        if (parsed.done) {
+                            bubble.innerHTML = formatMsg(bubble.dataset.raw);
+                            const nameEl = document.querySelector(`#chat-${activeChatId} .chat-item-name`);
+                            if (nameEl) nameEl.innerText = parsed.chat_name;
+                            msgDiv.scrollTop = msgDiv.scrollHeight;
+                        }
+                    } catch(e) {}
+                }
+            }
+        } catch(e) {
+            bubble.innerHTML = 'Erreur de connexion.';
+        }
+        isStreaming = false;
+        document.getElementById('sendBtn').disabled = false;
+        document.getElementById('sendBtnWelcome').disabled = false;
+    }
+
+    // ✅ FIX appendMsg : user à droite sans formatMsg, assistant avec formatMsg
+    function appendMsg(role, content, sender) {
+        const id = 'msg-' + Date.now();
+        const isUser = role === 'user';
+        const senderHtml = isUser
+            ? `<div class="avatar-small">${sender[0].toUpperCase()}</div> ${sender}`
+            : `<img src="/static/AI.png" alt="Z"> Zyntra`;
+        const bubbleContent = isUser
+            ? content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')
+            : (content ? formatMsg(content) : '');
+        const div = document.createElement('div');
+        div.className = `msg-row ${role}`;
+        div.innerHTML = `<div class="msg-sender">${senderHtml}</div><div class="msg-bubble" id="${id}">${bubbleContent}</div>`;
+        msgDiv.appendChild(div);
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+        return id;
+    }
+
+    function showCtxMenu(e, id, name) {
+        e.preventDefault(); e.stopPropagation();
+        if (ctxMenu) ctxMenu.remove();
+        ctxMenu = document.createElement('div');
+        ctxMenu.className = 'ctx-menu';
+        ctxMenu.style.top = e.clientY + 'px';
+        ctxMenu.style.left = e.clientX + 'px';
+        ctxMenu.innerHTML = `
+            <div class="ctx-item" onclick="shareChat(${id})">📤 Partager</div>
+            <div class="ctx-item" onclick="startGroup(${id}, '${name.replace(/'/g, "\\'")}')">👥 Démarrer une conversation de groupe</div>
+            <div class="ctx-item" onclick="renameChat(${id}, '${name.replace(/'/g, "\\'")}')">✏️ Renommer</div>
+            <div class="ctx-separator"></div>
+            <div class="ctx-item" onclick="pinChat(${id})">📌 Épingler le chat</div>
+            <div class="ctx-item" onclick="archiveChat(${id})">🗄️ Archiver</div>
+            <div class="ctx-separator"></div>
+            <div class="ctx-item" style="color:#ff6666" onclick="deleteChat(null,${id})">🗑️ Supprimer</div>`;
+        document.body.appendChild(ctxMenu);
+    }
+
+    async function shareChat(id) {
+        if (ctxMenu) ctxMenu.remove();
+        const res = await fetch('/api/share_chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id})});
+        const data = await res.json();
+        await navigator.clipboard.writeText(data.full_link);
+        alert('✅ Lien copié : ' + data.full_link);
+    }
+    async function startGroup(chatId, chatName) {
+        if (ctxMenu) ctxMenu.remove();
+        const name = prompt('Nom du groupe :', chatName);
+        if (!name) return;
+        const res = await fetch('/api/create_group', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+        const data = await res.json();
+        if (data.id) {
+            const copy = confirm(`Groupe "${data.name}" créé !\nLien : ${data.invite_link}\nCopier ?`);
+            if (copy) navigator.clipboard.writeText(data.invite_link);
+            window.location.href = `/group/${data.id}`;
+        }
+    }
+    async function renameChat(id, oldName) {
+        if (ctxMenu) ctxMenu.remove();
+        const newName = prompt('Nouveau nom :', oldName);
+        if (!newName || !newName.trim()) return;
+        await fetch('/api/rename_chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id,name:newName.trim()})});
+        const el = document.querySelector(`#chat-${id} .chat-item-name`);
+        if (el) el.innerText = newName.trim();
+    }
+    async function pinChat(id) {
+        if (ctxMenu) ctxMenu.remove();
+        const res = await fetch('/api/pin_chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id})});
+        const data = await res.json();
+        const el = document.getElementById(`chat-${id}`);
+        if (el) {
+            if (data.pinned) { el.classList.add('pinned'); el.querySelector('.chat-item-name').innerText = '📌 ' + el.querySelector('.chat-item-name').innerText.replace('📌 ',''); }
+            else { el.classList.remove('pinned'); el.querySelector('.chat-item-name').innerText = el.querySelector('.chat-item-name').innerText.replace('📌 ',''); }
+        }
+    }
+    async function archiveChat(id) {
+        if (ctxMenu) ctxMenu.remove();
+        if (!confirm('Archiver ce chat ?')) return;
+        await fetch('/api/archive_chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id})});
+        if (id === activeChatId) window.location.href = '/chat';
+        else { const el = document.getElementById(`chat-${id}`); if (el) el.remove(); }
+    }
+    let recognition = null, isRecording = false;
+    function toggleVoice(type) {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('Utilise Chrome !'); return; }
+        if (isRecording) { recognition.stop(); return; }
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SR();
+        recognition.lang = 'fr-FR';
+        recognition.interimResults = true;
+        const inputEl = type === 'welcome' ? document.getElementById('inputBoxWelcome') : document.getElementById('inputBox');
+        const micEl = type === 'welcome' ? document.getElementById('micBtnWelcome') : document.getElementById('micBtn');
+        recognition.onstart = () => { isRecording = true; micEl.classList.add('recording'); };
+        recognition.onresult = (e) => {
+            let t = '';
+            for (let i = e.resultIndex; i < e.results.length; i++) t += e.results[i][0].transcript;
+            inputEl.value = t;
+            document.getElementById('sendBtn').disabled = !t.trim();
+            document.getElementById('sendBtnWelcome').disabled = !t.trim();
+        };
+        recognition.onend = () => { isRecording = false; micEl.classList.remove('recording'); if (inputEl.value.trim()) sendMsg(); };
+        recognition.onerror = () => { isRecording = false; micEl.classList.remove('recording'); };
+        recognition.start();
+    }
+    async function newChat() {
+        const res = await fetch('/api/new_chat', {method:'POST',headers:{'Content-Type':'application/json'}});
+        const data = await res.json();
+        window.location.href = `/chat?chat_id=${data.id}`;
+    }
+    function switchChat(id) { window.location.href = `/chat?chat_id=${id}`; }
+    async function deleteChat(e, id) {
+        if (e) e.stopPropagation();
+        if (ctxMenu) ctxMenu.remove();
+        await fetch('/api/delete_chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id})});
+        if (id === activeChatId) window.location.href = '/chat';
+        else { const el = document.getElementById(`chat-${id}`); if (el) el.remove(); }
+    }
+</script>
+</body>
+</html>
