@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat de groupe</title>
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial;
+            margin: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            margin-top: 30px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .chat-box {
+            background: #1e293b;
+            height: 400px;
+            border-radius: 10px;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .message {
+            background: #334155;
+            padding: 8px;
+            border-radius: 8px;
+            margin: 5px 0;
+        }
+
+        .input-box {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        button {
+            padding: 10px;
+            margin-left: 5px;
+            border: none;
+            border-radius: 5px;
+            background: #22c55e;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #16a34a;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>💬 Chat de groupe</h1>
+
+    <div class="chat-box" id="chat">
+        <div class="message">Bienvenue dans le groupe 🚀</div>
+    </div>
+
+    <div class="input-box">
+        <input id="msg" placeholder="Ecris un message...">
+        <button onclick="sendMessage()">Envoyer</button>
+    </div>
+</div>
+
+<script>
+function sendMessage() {
+    let msg = document.getElementById("msg").value;
+    if (msg === "") return;
+
+    let chat = document.getElementById("chat");
+
+    let div = document.createElement("div");
+    div.className = "message";
+    div.innerText = msg;
+
+    chat.appendChild(div);
+
+    document.getElementById("msg").value = "";
+}
+</script>
+
+</body>
+</html>

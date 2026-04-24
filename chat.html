@@ -74,10 +74,11 @@
         @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
         .cursor { display: inline-block; width: 2px; height: 1em; background: #CC785C; margin-left: 2px; vertical-align: text-bottom; animation: blink 0.7s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-        .plus-menu { position: fixed; background: #2f2f2f; border: 1px solid #404040; border-radius: 12px; padding: 6px; z-index: 99999; min-width: 200px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); display: none; }
+        .plus-menu { position: absolute; bottom: 120px; left: 20%; background: #2f2f2f; border: 1px solid #404040; border-radius: 12px; padding: 6px; display: none; flex-direction: column; gap: 2px; z-index: 100; min-width: 200px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .plus-menu.open { display: flex; }
         .menu-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #c5c5d2; transition: background 0.15s; }
         .menu-item:hover { background: #404040; color: #ececec; }
-        .ctx-menu { position: fixed; background: #2f2f2f; border: 1px solid #404040; border-radius: 12px; padding: 6px; z-index: 99999; min-width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        .ctx-menu { position: fixed; background: #2f2f2f; border: 1px solid #404040; border-radius: 12px; padding: 6px; z-index: 1000; min-width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
         .ctx-item { padding: 9px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #c5c5d2; display: flex; align-items: center; gap: 10px; transition: background 0.15s; }
         .ctx-item:hover { background: #404040; color: #ececec; }
         .ctx-separator { height: 1px; background: #404040; margin: 4px 0; }
@@ -103,14 +104,15 @@
             <img src="/static/AI.png" alt="Zyntra">
             <span class="logo-name">Zyntra</span>
         </div>
-        <button class="icon-btn" onclick="newChat()">✏️</button>
+        <button class="icon-btn" onclick="newChat()" title="Nouveau chat">✏️</button>
     </div>
     <button class="new-chat-btn" onclick="newChat()">＋ Nouveau chat</button>
     <div class="sidebar-section">Récents</div>
     <div class="chat-list" id="chatList">
         {% for chat in chats %}
         <div class="chat-item {% if chat.id == active.id %}active{% endif %} {% if chat.is_pinned %}pinned{% endif %}"
-             onclick="switchChat({{ chat.id }})" id="chat-{{ chat.id }}"
+             onclick="switchChat({{ chat.id }})"
+             id="chat-{{ chat.id }}"
              oncontextmenu="showCtxMenu(event, {{ chat.id }}, '{{ chat.name }}')">
             <span class="chat-item-name">{% if chat.is_pinned %}📌 {% endif %}{{ chat.name }}</span>
             <span class="chat-dots" onclick="showCtxMenu(event, {{ chat.id }}, '{{ chat.name }}')">···</span>
@@ -158,7 +160,7 @@
                 </div>
                 <div class="input-actions">
                     <div class="input-left">
-                        <button class="action-btn" onclick="toggleMenu(event, this)">＋ Joindre</button>
+                        <button class="action-btn" onclick="toggleMenu()">＋ Joindre</button>
                     </div>
                 </div>
             </div>
@@ -182,15 +184,22 @@
     </div>
 
     <div class="input-area" id="inputArea" style="display:none;">
-        <div class="input-container">
-            <div class="input-row">
-                <textarea class="input-box" id="inputBox" rows="1" placeholder="Envoyer un message à Zyntra..."></textarea>
-                <button class="mic-btn" id="micBtn" onclick="toggleVoice('main')">🎤</button>
-                <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled>↑</button>
+        <div style="position:relative;">
+            <div class="plus-menu" id="plusMenu">
+                <div class="menu-item" onclick="attachImage()">📎 Joindre une image</div>
+                <div class="menu-item" onclick="attachPDF()">📄 Joindre un PDF</div>
+                <div class="menu-item" onclick="webSearch()">🌐 Recherche Web</div>
             </div>
-            <div class="input-actions">
-                <div class="input-left">
-                    <button class="action-btn" onclick="toggleMenu(event, this)">＋ Joindre</button>
+            <div class="input-container">
+                <div class="input-row">
+                    <textarea class="input-box" id="inputBox" rows="1" placeholder="Envoyer un message à Zyntra..."></textarea>
+                    <button class="mic-btn" id="micBtn" onclick="toggleVoice('main')">🎤</button>
+                    <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled>↑</button>
+                </div>
+                <div class="input-actions">
+                    <div class="input-left">
+                        <button class="action-btn" onclick="toggleMenu()">＋ Joindre</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -201,13 +210,6 @@
     <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="handlePDF(event)">
 </div>
 
-<!-- ✅ Menu joindre DIRECTEMENT dans body -->
-<div id="plusMenu" class="plus-menu">
-    <div class="menu-item" onclick="attachImage()">📎 Joindre une image</div>
-    <div class="menu-item" onclick="attachPDF()">📄 Joindre un PDF</div>
-    <div class="menu-item" onclick="webSearch()">🌐 Recherche Web</div>
-</div>
-
 <script>
     let activeChatId = {{ active.id }};
     const msgDiv = document.getElementById('messages');
@@ -215,7 +217,6 @@
     let attachedPDF = null;
     let ctxMenu = null;
     let isStreaming = false;
-    let menuOpen = false;
 
     const hasMessages = {{ messages|length }} > 0;
     if (hasMessages) {
@@ -261,71 +262,6 @@
     setupInput('inputBoxWelcome', 'sendBtnWelcome');
     setupInput('inputBox', 'sendBtn');
 
-    // ✅ FIX JOINDRE : menu placé directement dans body, position calculée après affichage
-    function toggleMenu(e, btn) {
-        e.stopPropagation();
-        const menu = document.getElementById('plusMenu');
-        if (menuOpen) {
-            menu.style.display = 'none';
-            menuOpen = false;
-            return;
-        }
-        menu.style.visibility = 'hidden';
-        menu.style.display = 'block';
-        const rect = btn.getBoundingClientRect();
-        const menuH = menu.offsetHeight;
-        const menuW = menu.offsetWidth;
-        let top = rect.top - menuH - 8;
-        let left = rect.left;
-        if (top < 0) top = rect.bottom + 8;
-        if (left + menuW > window.innerWidth) left = window.innerWidth - menuW - 8;
-        menu.style.top = top + 'px';
-        menu.style.left = left + 'px';
-        menu.style.visibility = 'visible';
-        menuOpen = true;
-    }
-
-    document.addEventListener('click', function(e) {
-        const menu = document.getElementById('plusMenu');
-        if (menuOpen && !menu.contains(e.target)) {
-            menu.style.display = 'none';
-            menuOpen = false;
-        }
-        if (ctxMenu && !ctxMenu.contains(e.target)) ctxMenu.remove();
-    });
-
-    function closeMenu() {
-        document.getElementById('plusMenu').style.display = 'none';
-        menuOpen = false;
-    }
-
-    function attachImage() { closeMenu(); document.getElementById('imageInput').click(); }
-    function handleImage(e) {
-        const f = e.target.files[0]; if (!f) return;
-        attachedImage = f;
-        getActiveInput().placeholder = `📎 ${f.name} joint`;
-        document.getElementById('sendBtn').disabled = false;
-        document.getElementById('sendBtnWelcome').disabled = false;
-    }
-    function attachPDF() { closeMenu(); document.getElementById('pdfInput').click(); }
-    function handlePDF(e) {
-        const f = e.target.files[0]; if (!f) return;
-        attachedPDF = f;
-        getActiveInput().placeholder = `📄 ${f.name} joint`;
-        document.getElementById('sendBtn').disabled = false;
-        document.getElementById('sendBtnWelcome').disabled = false;
-    }
-    function webSearch() {
-        closeMenu();
-        const inp = getActiveInput(); inp.value = '🌐 '; inp.focus();
-        document.getElementById('sendBtn').disabled = false;
-        document.getElementById('sendBtnWelcome').disabled = false;
-    }
-    function getActiveInput() {
-        return document.getElementById('inputArea').style.display !== 'none'
-            ? document.getElementById('inputBox') : document.getElementById('inputBoxWelcome');
-    }
-
     async function sendMsg() {
         if (isStreaming) return;
         const isWelcome = document.getElementById('welcomeScreen').style.display !== 'none';
@@ -334,7 +270,8 @@
         const mode = document.getElementById('modeSelect').value;
         if (!text && !attachedImage && !attachedPDF) return;
 
-        let displayText = text, sendText = text;
+        let displayText = text;
+        let sendText = text;
         if (attachedImage) { displayText = `📎 ${attachedImage.name}\n${text}`; sendText = `[Image: ${attachedImage.name}] ${text}`; attachedImage = null; }
         if (attachedPDF) { displayText = `📄 ${attachedPDF.name}\n${text}`; sendText = `[PDF: ${attachedPDF.name}] ${text}`; attachedPDF = null; }
 
@@ -348,10 +285,7 @@
         document.getElementById('messages').classList.add('active');
         document.getElementById('inputArea').style.display = 'block';
 
-        // ✅ FIX : message user affiché correctement à droite
         appendMsg('user', displayText, '{{ user.username }}');
-
-        // bulle Zyntra vide avec curseur
         const loadId = appendMsg('assistant', '', 'Zyntra');
         const bubble = document.getElementById(loadId);
         bubble.innerHTML = '<span class="cursor"></span>';
@@ -363,8 +297,10 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({chat_id: activeChatId, message: sendText, mode: mode})
             });
+
             const contentType = res.headers.get('content-type') || '';
 
+            // CAS EXPO : JSON normal
             if (contentType.includes('application/json')) {
                 const data = await res.json();
                 bubble.innerHTML = formatMsg(data.reply);
@@ -377,15 +313,18 @@
                 return;
             }
 
+            // ✅ CAS NORMAL : streaming token par token
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
                 buffer = lines.pop();
+
                 for (const line of lines) {
                     if (!line.startsWith('data: ')) continue;
                     const jsonStr = line.slice(6).trim();
@@ -407,33 +346,31 @@
                 }
             }
         } catch(e) {
-            bubble.innerHTML = 'Erreur de connexion.';
+            bubble.innerHTML = formatMsg('Erreur de connexion.');
         }
+
         isStreaming = false;
         document.getElementById('sendBtn').disabled = false;
         document.getElementById('sendBtnWelcome').disabled = false;
     }
 
-    // ✅ FIX appendMsg : user à droite sans formatMsg, assistant avec formatMsg
     function appendMsg(role, content, sender) {
         const id = 'msg-' + Date.now();
         const isUser = role === 'user';
         const senderHtml = isUser
             ? `<div class="avatar-small">${sender[0].toUpperCase()}</div> ${sender}`
             : `<img src="/static/AI.png" alt="Z"> Zyntra`;
-        const bubbleContent = isUser
-            ? content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')
-            : (content ? formatMsg(content) : '');
         const div = document.createElement('div');
         div.className = `msg-row ${role}`;
-        div.innerHTML = `<div class="msg-sender">${senderHtml}</div><div class="msg-bubble" id="${id}">${bubbleContent}</div>`;
+        div.innerHTML = `<div class="msg-sender">${senderHtml}</div><div class="msg-bubble" id="${id}">${content ? formatMsg(content) : ''}</div>`;
         msgDiv.appendChild(div);
         msgDiv.scrollTop = msgDiv.scrollHeight;
         return id;
     }
 
     function showCtxMenu(e, id, name) {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         if (ctxMenu) ctxMenu.remove();
         ctxMenu = document.createElement('div');
         ctxMenu.className = 'ctx-menu';
@@ -450,6 +387,7 @@
             <div class="ctx-item" style="color:#ff6666" onclick="deleteChat(null,${id})">🗑️ Supprimer</div>`;
         document.body.appendChild(ctxMenu);
     }
+    document.addEventListener('click', () => { if (ctxMenu) ctxMenu.remove(); });
 
     async function shareChat(id) {
         if (ctxMenu) ctxMenu.remove();
@@ -458,6 +396,7 @@
         await navigator.clipboard.writeText(data.full_link);
         alert('✅ Lien copié : ' + data.full_link);
     }
+
     async function startGroup(chatId, chatName) {
         if (ctxMenu) ctxMenu.remove();
         const name = prompt('Nom du groupe :', chatName);
@@ -465,11 +404,12 @@
         const res = await fetch('/api/create_group', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
         const data = await res.json();
         if (data.id) {
-            const copy = confirm(`Groupe "${data.name}" créé !\nLien : ${data.invite_link}\nCopier ?`);
+            const copy = confirm(`Groupe "${data.name}" créé !\n\nLien :\n${data.invite_link}\n\nCopier ?`);
             if (copy) navigator.clipboard.writeText(data.invite_link);
             window.location.href = `/group/${data.id}`;
         }
     }
+
     async function renameChat(id, oldName) {
         if (ctxMenu) ctxMenu.remove();
         const newName = prompt('Nouveau nom :', oldName);
@@ -478,6 +418,7 @@
         const el = document.querySelector(`#chat-${id} .chat-item-name`);
         if (el) el.innerText = newName.trim();
     }
+
     async function pinChat(id) {
         if (ctxMenu) ctxMenu.remove();
         const res = await fetch('/api/pin_chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:id})});
@@ -488,6 +429,7 @@
             else { el.classList.remove('pinned'); el.querySelector('.chat-item-name').innerText = el.querySelector('.chat-item-name').innerText.replace('📌 ',''); }
         }
     }
+
     async function archiveChat(id) {
         if (ctxMenu) ctxMenu.remove();
         if (!confirm('Archiver ce chat ?')) return;
@@ -495,6 +437,28 @@
         if (id === activeChatId) window.location.href = '/chat';
         else { const el = document.getElementById(`chat-${id}`); if (el) el.remove(); }
     }
+
+    function toggleMenu() { document.getElementById('plusMenu').classList.toggle('open'); }
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('plusMenu');
+        if (menu && !menu.contains(e.target) && !e.target.classList.contains('action-btn')) menu.classList.remove('open');
+    });
+
+    function attachImage() { document.getElementById('plusMenu').classList.remove('open'); document.getElementById('imageInput').click(); }
+    function handleImage(e) { const f = e.target.files[0]; if (!f) return; attachedImage = f; getActiveInput().placeholder = `📎 ${f.name} joint`; }
+    function attachPDF() { document.getElementById('plusMenu').classList.remove('open'); document.getElementById('pdfInput').click(); }
+    function handlePDF(e) { const f = e.target.files[0]; if (!f) return; attachedPDF = f; getActiveInput().placeholder = `📄 ${f.name} joint`; }
+    function webSearch() {
+        document.getElementById('plusMenu').classList.remove('open');
+        const inp = getActiveInput(); inp.value = '🌐 '; inp.focus();
+        document.getElementById('sendBtn').disabled = false;
+        document.getElementById('sendBtnWelcome').disabled = false;
+    }
+    function getActiveInput() {
+        return document.getElementById('inputArea').style.display !== 'none'
+            ? document.getElementById('inputBox') : document.getElementById('inputBoxWelcome');
+    }
+
     let recognition = null, isRecording = false;
     function toggleVoice(type) {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('Utilise Chrome !'); return; }
@@ -517,6 +481,7 @@
         recognition.onerror = () => { isRecording = false; micEl.classList.remove('recording'); };
         recognition.start();
     }
+
     async function newChat() {
         const res = await fetch('/api/new_chat', {method:'POST',headers:{'Content-Type':'application/json'}});
         const data = await res.json();

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Zyntra Chat Groupe</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+}
+
+header {
+    background: #020617;
+    padding: 15px;
+    text-align: center;
+    font-size: 20px;
+}
+
+#chat {
+    height: 70vh;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.message {
+    display: flex;
+    align-items: flex-start;
+    margin: 10px 0;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.bubble {
+    background: #1e293b;
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 60%;
+}
+
+.name {
+    font-weight: bold;
+    font-size: 12px;
+    color: #38bdf8;
+}
+
+#controls {
+    display: flex;
+    padding: 10px;
+    background: #020617;
+}
+
+select, input {
+    padding: 10px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 5px;
+}
+
+button {
+    background: #38bdf8;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>🤖 Zyntra Groupe Chat</header>
+
+<div id="chat"></div>
+
+<div id="controls">
+    <select id="user">
+        <option value="Hamza">Hamza</option>
+        <option value="Frere">Frère</option>
+    </select>
+
+    <input type="text" id="message" placeholder="Écris un message...">
+    <button onclick="send()">Envoyer</button>
+</div>
+
+<script>
+let chat = document.getElementById("chat");
+
+let avatars = {
+    Hamza: "https://i.imgur.com/1X6hX9B.png",
+    Frere: "https://i.imgur.com/4ZQZ4Zs.png",
+    Zyntra: "https://i.imgur.com/8Km9tLL.png"
+};
+
+function addMessage(user, text) {
+    let div = document.createElement("div");
+    div.className = "message";
+
+    let avatar = document.createElement("img");
+    avatar.className = "avatar";
+    avatar.src = avatars[user];
+
+    let bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    bubble.innerHTML = "<div class='name'>" + user + "</div>" + text;
+
+    div.appendChild(avatar);
+    div.appendChild(bubble);
+
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function send() {
+    let user = document.getElementById("user").value;
+    let message = document.getElementById("message").value;
+
+    if (message === "") return;
+
+    addMessage(user, message);
+    document.getElementById("message").value = "";
+
+    // Zyntra répond si on l'appelle
+    if (message.toLowerCase().includes("zyntra")) {
+        setTimeout(() => {
+            zyntraReply(message, user);
+        }, 800);
+    }
+}
+
+function zyntraReply(message, user) {
+    let response = "";
+
+    if (message.includes("bonjour")) {
+        response = "Bonjour @" + user + " 👋";
+    }
+    else if (message.includes("arduino")) {
+        response = "Je peux t'aider en Arduino 🔧";
+    }
+    else if (message.includes("python")) {
+        response = "Python détecté 🐍 je suis prêt";
+    }
+    else {
+        let replies = [
+            "Je t'écoute @" + user,
+            "Explique-moi plus 👀",
+            "Bonne idée 😎",
+            "Intéressant 🔥",
+            "Continue 👍"
+        ];
+        response = replies[Math.floor(Math.random() * replies.length)];
+    }
+
+    addMessage("Zyntra", response);
+}
+
+// Message de départ
+addMessage("Zyntra", "Salut 👋 je suis Zyntra, parle-moi !");
+</script>
+
+</body>
+</html>
